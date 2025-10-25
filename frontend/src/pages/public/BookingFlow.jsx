@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
 
@@ -71,25 +71,91 @@ export default function BookingFlow() {
     setStep(3);
   };
 
+  const isValidEmail = (email) => {
+    // Regex simple y suficiente para validación cliente
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+  };
+
+  const extractApiError = (err) => {
+    if (!navigator.onLine) return 'Sin conexión. Revisa tu conexión a internet.';
+    if (err.response) {
+      const { status, data } = err.response;
+      // 409 conflicto (horario reservado)
+      if (status === 409) {
+        // Si la API devuelve detalle más específico, mostrarlo
+        return data?.message || 'Lo sentimos, este horario ya fue reservado. Por favor elige otro.';
+      }
+      // 422 validación (Laravel/JSON:API style)
+      if (status === 422) {
+        const errors = data?.errors || data;
+        if (errors && typeof errors === 'object') {
+          const first = Object.values(errors).flat?.()[0] || Object.values(errors)[0][0];
+          return first || data?.message || 'Datos inválidos. Revisa el formulario.';
+        }
+        return data?.message || 'Datos inválidos. Revisa el formulario.';
+      }
+      // Otros errores con mensaje
+      if (data?.message) return data.message;
+      return `Error del servidor (${status}). Intenta de nuevo más tarde.`;
+    }
+    if (err.request) {
+      // La petición se envió pero no hubo respuesta
+      return 'No se obtuvo respuesta del servidor. Intenta de nuevo más tarde.';
+    }
+    // Errores en cliente / network
+    return err.message || 'Error desconocido. Intenta de nuevo.';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
+    // Validaciones del lado del cliente
+    if (formData.customer_name.trim().length < 3) {
+      setError('El nombre debe tener al menos 3 caracteres');
+      setLoading(false);
+      return;
+    }
+
+    if (!isValidEmail(formData.customer_email)) {
+      setError('Introduce un correo electrónico válido');
+      setLoading(false);
+      return;
+    }
+
+    if (!selectedDate) {
+      setError('Selecciona una fecha');
+      setLoading(false);
+      return;
+    }
+
+    if (!selectedTime) {
+      setError('Selecciona una hora');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await api.post('/bookings', {
+      const payload = {
         business_id: business.id,
         service_id: service.id,
-        customer_name: formData.customer_name,
-        customer_email: formData.customer_email,
+        customer_name: formData.customer_name.trim(),
+        customer_email: formData.customer_email.trim().toLowerCase(),
         date: selectedDate,
         time: selectedTime,
-      });
+      };
+
+      const response = await api.post('/bookings', payload);
 
       setBooking(response.data.booking);
       setStep(4);
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al crear la reserva');
+      const message = extractApiError(err);
+      setError(message);
+      // Logueo para depuración; remover en producción si es necesario
+      console.error('Booking error:', err);
     } finally {
       setLoading(false);
     }
