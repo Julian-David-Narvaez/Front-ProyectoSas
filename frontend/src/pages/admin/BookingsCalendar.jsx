@@ -134,12 +134,15 @@ export default function BookingsCalendar() {
               📅 Agenda
             </button>
             <button
-              onClick={() => navigate(`/admin/business/${businessId}/services`)}
+              onClick={() => navigate(`/admin/business/${businessId}/schedules`)}
               className="px-4 py-2 bg-slate-700 text-slate-200 rounded-md font-medium hover:bg-slate-600 transition-colors"
             >
               Horarios
             </button>
-            <button className="px-4 py-2 bg-slate-700 text-slate-200 rounded-md font-medium hover:bg-slate-600 transition-colors">
+            
+            <button 
+              onClick={() => navigate(`/admin/business/${businessId}/page`)}
+              className="px-4 py-2 bg-slate-700 text-slate-200 rounded-md font-medium hover:bg-slate-600 transition-colors">
               Editar Landing
             </button>
           </div>
