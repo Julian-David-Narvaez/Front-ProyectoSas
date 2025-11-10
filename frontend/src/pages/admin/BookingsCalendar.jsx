@@ -130,7 +130,7 @@ export default function BookingsCalendar() {
             <h1 className="text-2xl font-bold mt-1 text-white">{business?.name}</h1>
           </div>
           <div className="flex gap-2">
-            <button className="px-4 py-2 bg-cyan-400 text-slate-900 rounded-md font-semibold hover:bg-cyan-300 transition-colors flex items-center gap-2">
+            <button className="px-4 py-2 bg-cyan-400 text-slate-900 rounded-md font-semibold flex items-center gap-2 cursor-default" disabled>
               📅 Agenda
             </button>
             <button
