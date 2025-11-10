@@ -6,14 +6,13 @@ import interactionPlugin from "@fullcalendar/interaction"
 import listPlugin from "@fullcalendar/list"
 import FullCalendar from "@fullcalendar/react"
 import timeGridPlugin from "@fullcalendar/timegrid"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
 import api from "../../api/axios"
 
 export default function BookingsCalendar() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const businessId = searchParams.get("businessId")
+  const navigate = useNavigate()
+  const { businessId } = useParams()
   const [business, setBusiness] = useState(null)
   const [bookings, setBookings] = useState([])
   const [events, setEvents] = useState([])
@@ -23,11 +22,7 @@ export default function BookingsCalendar() {
   const [confirmDialog, setConfirmDialog] = useState({ show: false, message: "", onConfirm: null })
   const initialView = "timeGridDay"
 
-  useEffect(() => {
-    fetchData()
-  }, [businessId])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [businessRes, bookingsRes] = await Promise.all([
         api.get(`/businesses/${businessId}`),
@@ -56,7 +51,11 @@ export default function BookingsCalendar() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [businessId])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
   const handleEventClick = (info) => {
     setSelectedBooking(info.event.extendedProps.booking)
@@ -123,7 +122,7 @@ export default function BookingsCalendar() {
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div>
             <button
-              onClick={() => router.push(`/admin/business/${businessId}/services`)}
+              onClick={() => navigate(`/admin/business/${businessId}/services`)}
               className="text-cyan-400 hover:text-cyan-300 text-sm font-medium transition-colors"
             >
               ← Dashboard
@@ -135,7 +134,7 @@ export default function BookingsCalendar() {
               📅 Agenda
             </button>
             <button
-              onClick={() => router.push(`/admin/business/${businessId}/services`)}
+              onClick={() => navigate(`/admin/business/${businessId}/services`)}
               className="px-4 py-2 bg-slate-700 text-slate-200 rounded-md font-medium hover:bg-slate-600 transition-colors"
             >
               Horarios
