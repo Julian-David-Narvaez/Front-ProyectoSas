@@ -1,23 +1,24 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
+import { AuthProvider } from './context/AuthContext';
 
 // Auth
+import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
 
 // Admin
-import BusinessForm from './pages/admin/BusinessForm';
-import ServicesList from './pages/admin/ServicesList';
-import ServiceForm from './pages/admin/ServiceForm';
-import SchedulesList from './pages/admin/SchedulesList';
-import PageBuilder from './pages/admin/PageBuilder';
 import BookingsCalendar from './pages/admin/BookingsCalendar';
+import BusinessForm from './pages/admin/BusinessForm';
+import PageBuilder from './pages/admin/PageBuilder';
+import SchedulesList from './pages/admin/SchedulesList';
+import ServiceForm from './pages/admin/ServiceForm';
+import ServicesList from './pages/admin/ServicesList';
+import SuperAdmin from './pages/admin/SuperAdmin';
 
 // Public
-import LandingPage from './pages/public/LandingPage';
 import BookingFlow from './pages/public/BookingFlow';
+import LandingPage from './pages/public/LandingPage';
 
 function App() {
   return (
@@ -90,6 +91,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <BookingsCalendar />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/superadmin"
+            element={
+              <ProtectedRoute>
+                <SuperAdmin />
               </ProtectedRoute>
             }
           />
