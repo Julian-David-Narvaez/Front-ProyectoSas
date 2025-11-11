@@ -121,6 +121,21 @@ export default function Dashboard() {
                   >
                     Gestionar
                   </button>
+                  <button
+                    onClick={async () => {
+                      if (!window.confirm('¿Estás seguro de eliminar este negocio y todos sus datos? Esta acción no se puede deshacer.')) return
+                      try {
+                        await api.delete(`/businesses/${business.id}`)
+                        setBusinesses((prev) => prev.filter((b) => b.id !== business.id))
+                      } catch (error) {
+                        console.error('Error al eliminar negocio:', error)
+                        window.alert('No se pudo eliminar el negocio')
+                      }
+                    }}
+                    className="px-4 py-2.5 bg-red-700 text-white text-sm rounded-lg font-medium hover:bg-red-600 transition-all duration-200"
+                  >
+                    Eliminar
+                  </button>
                   <a
                     href={`/${business.slug}`}
                     target="_blank"
