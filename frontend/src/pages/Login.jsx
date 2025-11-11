@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 
 export default function Login() {
@@ -15,8 +15,13 @@ export default function Login() {
     e.preventDefault()
     setError("")
     try {
-      await login(email, password)
-      navigate("/dashboard")
+      const loggedUser = await login(email, password)
+      // Redirigir según rol
+      if (loggedUser && loggedUser.role === 'superadmin') {
+        navigate('/admin/superadmin')
+      } else {
+        navigate('/dashboard')
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Error al iniciar sesión")
     }
@@ -89,7 +94,7 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-slate-400">
+          {/* <p className="text-center text-sm text-slate-400">
             ¿No tienes cuenta?{" "}
             <Link
               to="/register"
@@ -97,7 +102,7 @@ export default function Login() {
             >
               Regístrate
             </Link>
-          </p>
+          </p> */}
         </div>
       </div>
     </div>

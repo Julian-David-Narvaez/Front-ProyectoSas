@@ -46,6 +46,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('token', access_token);
     api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
     setUser(user);
+    return user; // devolver el usuario para que el llamador pueda decidir la navegación
   };
 
   const register = async (name, email, password, password_confirmation) => {

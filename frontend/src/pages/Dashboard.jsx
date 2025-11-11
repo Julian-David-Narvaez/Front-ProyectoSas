@@ -18,7 +18,9 @@ export default function Dashboard() {
   const fetchBusinesses = async () => {
     try {
       const response = await api.get("/businesses")
-      setBusinesses(response.data)
+      // Backend puede devolver { data: [...], permissions: {...} } o directamente el array
+      const payload = response.data && response.data.data ? response.data.data : response.data
+      setBusinesses(payload)
     } catch (error) {
       console.error("Error al cargar negocios:", error)
     } finally {
@@ -71,16 +73,27 @@ export default function Dashboard() {
 
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-2xl font-semibold text-gray-100">Mis Negocios</h3>
-          <button
-            onClick={() => navigate("/admin/business/new")}
-            className="group relative px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg font-semibold shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 overflow-hidden"
-          >
-            <span className="relative z-10 flex items-center gap-2">
-              <span className="text-xl">+</span>
-              Crear Negocio
-            </span>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          </button>
+          <div className="flex items-center gap-3">
+            {user?.role === 'superadmin' && (
+              <button
+                onClick={() => navigate('/admin/superadmin')}
+                className="px-4 py-2 bg-amber-500 text-black rounded-lg font-semibold shadow hover:opacity-90 transition"
+              >
+                Panel Superadmin
+              </button>
+            )}
+
+            <button
+              onClick={() => navigate('/admin/business/new')}
+              className="group relative px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg font-semibold shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 overflow-hidden"
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                <span className="text-xl">+</span>
+                Crear Negocio
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </button>
+          </div>
         </div>
 
         {businesses.length === 0 ? (

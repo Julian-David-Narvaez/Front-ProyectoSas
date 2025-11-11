@@ -2,11 +2,11 @@
 
 import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { useEffect, useState } from "react"
@@ -242,6 +242,7 @@ export default function PageBuilder() {
   const [loading, setLoading] = useState(true)
   const [editingBlock, setEditingBlock] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [blockedMessage, setBlockedMessage] = useState(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -251,23 +252,28 @@ export default function PageBuilder() {
   )
 
   useEffect(() => {
-    fetchData()
-  }, [businessId])
-
-  const fetchData = async () => {
-    try {
-      const [businessRes, pageRes] = await Promise.all([
-        api.get(`/businesses/${businessId}`),
-        api.get(`/businesses/${businessId}/page`),
-      ])
-      setBusiness(businessRes.data)
-      setBlocks(pageRes.data.blocks || [])
-    } catch (error) {
-      console.error("Error al cargar datos:", error)
-    } finally {
-      setLoading(false)
+    const load = async () => {
+      setLoading(true)
+      try {
+        const [businessRes, pageRes] = await Promise.all([
+          api.get(`/businesses/${businessId}`),
+          api.get(`/businesses/${businessId}/page`),
+        ])
+        setBusiness(businessRes.data)
+        setBlocks(pageRes.data.blocks || [])
+      } catch (error) {
+        console.error("Error al cargar datos:", error)
+        const status = error.response?.status
+        const msg = error.response?.data?.message
+        if (status === 403 && msg && msg.toLowerCase().includes('acceso bloqueado')) {
+          setBlockedMessage(msg)
+        }
+      } finally {
+        setLoading(false)
+      }
     }
-  }
+    load()
+  }, [businessId])
 
   const handleDragEnd = (event) => {
     const { active, over } = event
@@ -321,6 +327,17 @@ export default function PageBuilder() {
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">Cargando...</div>
+  }
+  if (blockedMessage) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6">
+        <div className="max-w-xl w-full bg-slate-800/60 border border-slate-700 rounded-lg p-8 text-center">
+          <h2 className="text-2xl font-bold mb-2">Acceso Bloqueado</h2>
+          <p className="text-slate-300 mb-4">{blockedMessage}</p>
+          <p className="text-sm text-slate-400">Si crees que esto es un error, contacta al superadmin para que revise tu cuenta.</p>
+        </div>
+      </div>
+    )
   }
 
   return (
