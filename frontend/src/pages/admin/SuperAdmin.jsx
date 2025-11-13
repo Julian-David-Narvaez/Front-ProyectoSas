@@ -408,6 +408,7 @@ export default function SuperAdmin() {
           </div>
         </div>
       </div>
+      </div>
 
       {/* Diálogo de confirmación */}
       <ConfirmDialog
