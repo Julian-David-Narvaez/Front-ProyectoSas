@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from '../../api/axios';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import { useToast } from '../../context/ToastContext';
 
 const EmployeesList = () => {
@@ -55,8 +56,8 @@ const EmployeesList = () => {
       return;
     }
 
-    if (formData.phone && formData.phone.trim().length < 7) {
-      toast.warning('El teléfono debe tener al menos 7 caracteres');
+    if (formData.phone && formData.phone.toString().length < 7) {
+      toast.warning('El teléfono debe tener al menos 7 dígitos');
       return;
     }
 
@@ -182,7 +183,7 @@ const EmployeesList = () => {
           <div>
             <label className="block text-sm font-medium mb-1 text-slate-300">Teléfono</label>
             <input
-              type="text"
+              type="number"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               className="w-full border border-slate-700 bg-slate-800 text-white rounded px-3 py-2 focus:border-cyan-500 focus:outline-none"
@@ -207,8 +208,9 @@ const EmployeesList = () => {
               onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
               className="w-full border border-slate-700 bg-slate-800 text-white rounded px-3 py-2 focus:border-cyan-500 focus:outline-none"
               step="1"
+              min="0"
             />
-            <p className="text-xs text-slate-500 mt-1">Orden en el que aparecerá en la lista (números enteros, puede usar negativos)</p>
+            <p className="text-xs text-slate-500 mt-1">Orden en el que aparecerá en la lista (solo números enteros positivos)</p>
           </div>
 
           <div className="flex gap-2">
@@ -296,6 +298,17 @@ const EmployeesList = () => {
       </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ isOpen: false, employeeId: null })}
+        onConfirm={() => {
+          handleDelete();
+          setConfirmDialog({ isOpen: false, employeeId: null });
+        }}
+        title="Eliminar Empleado"
+        message="¿Estás seguro de que deseas eliminar este empleado? Esta acción no se puede deshacer."
+      />
     </div>
   );
 };
