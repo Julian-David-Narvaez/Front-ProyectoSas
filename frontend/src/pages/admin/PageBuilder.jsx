@@ -12,6 +12,7 @@ import { CSS } from "@dnd-kit/utilities"
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import api from "../../api/axios"
+import { useToast } from "../../context/ToastContext"
 
 function SortableBlock({ block, onEdit, onDelete }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: block.id })
@@ -237,6 +238,7 @@ function BlockEditor({ block, onSave, onCancel }) {
 export default function PageBuilder() {
   const { businessId } = useParams()
   const navigate = useNavigate()
+  const toast = useToast()
   const [blocks, setBlocks] = useState([])
   const [business, setBusiness] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -299,10 +301,10 @@ export default function PageBuilder() {
         blocks: blocksToSave,
       })
 
-      alert("Cambios guardados exitosamente")
+      toast.success('Cambios guardados exitosamente')
     } catch (error) {
       console.error("Error al guardar cambios:", error)
-      alert("Error al guardar cambios")
+      toast.error('Error al guardar cambios')
     } finally {
       setSaving(false)
     }
@@ -319,9 +321,10 @@ export default function PageBuilder() {
     try {
       await api.delete(`/businesses/${businessId}/page/blocks/${blockId}`)
       setBlocks(blocks.filter((b) => b.id !== blockId))
+      toast.success('Bloque eliminado correctamente')
     } catch (error) {
       console.error("Error al eliminar bloque:", error)
-      alert("Error al eliminar bloque")
+      toast.error('Error al eliminar bloque')
     }
   }
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 
 export default function Register() {
@@ -10,6 +10,7 @@ export default function Register() {
     email: "",
     password: "",
     password_confirmation: "",
+    role: "client",
   })
   const [error, setError] = useState("")
   const { register } = useAuth()
@@ -18,8 +19,30 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
+
+    // Validaciones
+    if (formData.name.trim().length < 3) {
+      setError("El nombre debe tener al menos 3 caracteres")
+      return
+    }
+
+    if (!formData.email.includes('@') || !formData.email.includes('.')) {
+      setError("Por favor ingresa un email válido")
+      return
+    }
+
+    if (formData.password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres")
+      return
+    }
+
+    if (formData.password !== formData.password_confirmation) {
+      setError("Las contraseñas no coinciden")
+      return
+    }
+
     try {
-      await register(formData.name, formData.email, formData.password, formData.password_confirmation)
+      await register(formData.name, formData.email, formData.password, formData.password_confirmation, formData.role)
       navigate("/login")
     } catch (err) {
       setError(err.response?.data?.message || "Error al registrar")
@@ -77,6 +100,19 @@ export default function Register() {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Tipo de Usuario</label>
+            <select
+              value={formData.role}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm cursor-pointer"
+              required
+            >
+              <option value="client">Cliente</option>
+              <option value="superadmin">Super Admin</option>
+            </select>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">Contraseña</label>
             <input
               type="password"
@@ -85,7 +121,9 @@ export default function Register() {
               className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm"
               placeholder="••••••••"
               required
+              minLength="8"
             />
+            <p className="text-xs text-gray-400 mt-1">Mínimo 8 caracteres</p>
           </div>
 
           <div>

@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import api from "../../api/axios"
+import { useToast } from "../../context/ToastContext"
 
 const WEEKDAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]
 
 export default function SchedulesList() {
   const { businessId } = useParams()
   const navigate = useNavigate()
+  const toast = useToast()
   const [schedules, setSchedules] = useState([])
   const [employees, setEmployees] = useState([])
   const [business, setBusiness] = useState(null)
@@ -45,7 +47,7 @@ export default function SchedulesList() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (formData.end_time <= formData.start_time) {
-      alert("La hora de fin debe ser mayor que la hora de inicio")
+      toast.warning('La hora de fin debe ser mayor que la hora de inicio')
       return
     }
     setLoading(true)
@@ -58,8 +60,9 @@ export default function SchedulesList() {
       setShowForm(false)
       setFormData({ weekday: 1, start_time: "09:00", end_time: "18:00", employee_id: "" })
       await fetchData()
+      toast.success('Horario creado exitosamente')
     } catch (error) {
-      alert(error.response?.data?.message || "Error al crear horario")
+      toast.error(error.response?.data?.message || 'Error al crear horario')
     } finally {
       setLoading(false)
     }
@@ -71,8 +74,9 @@ export default function SchedulesList() {
     try {
       await api.delete(`/businesses/${businessId}/schedules/${scheduleId}`)
       setSchedules(schedules.filter((s) => s.id !== scheduleId))
+      toast.success('Horario eliminado correctamente')
     } catch (error) {
-      alert(error.response?.data?.message || "Error al eliminar horario")
+      toast.error(error.response?.data?.message || 'Error al eliminar horario')
     } finally {
       setLoading(false)
     }

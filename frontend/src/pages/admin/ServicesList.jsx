@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import api from "../../api/axios"
+import { useToast } from "../../context/ToastContext"
 
 export default function ServicesList() {
   const { businessId } = useParams()
   const navigate = useNavigate()
+  const toast = useToast()
   const [services, setServices] = useState([])
   const [business, setBusiness] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -34,9 +36,10 @@ export default function ServicesList() {
     try {
       await api.delete(`/businesses/${businessId}/services/${serviceId}`)
       setServices(services.filter((s) => s.id !== serviceId))
+      toast.success('Servicio eliminado correctamente')
     } catch (error) {
       console.error("Error al eliminar servicio:", error)
-      window.alert("Error al eliminar servicio")
+      toast.error('Error al eliminar servicio')
     }
   }
 

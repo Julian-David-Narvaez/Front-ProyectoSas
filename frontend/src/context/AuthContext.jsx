@@ -20,7 +20,6 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       fetchUser();
     } else {
       setLoading(false);
@@ -41,16 +40,25 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    const response = await api.post('/login', { email, password });
-    const { access_token, user } = response.data;
-    localStorage.setItem('token', access_token);
-    api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-    setUser(user);
-    return user; // devolver el usuario para que el llamador pueda decidir la navegación
+    try {
+      const response = await api.post('/login', { email, password });
+      const { access_token, user } = response.data;
+      
+      if (!access_token || !user) {
+        throw new Error('Respuesta inválida del servidor');
+      }
+      
+      localStorage.setItem('token', access_token);
+      setUser(user);
+      return user;
+    } catch (error) {
+      console.error('Error en login:', error);
+      throw error;
+    }
   };
 
-  const register = async (name, email, password, password_confirmation) => {
-    await api.post('/register', { name, email, password, password_confirmation });
+  const register = async (name, email, password, password_confirmation, role = 'client') => {
+    await api.post('/register', { name, email, password, password_confirmation, role });
   };
 
   const logout = async () => {
@@ -60,7 +68,6 @@ export const AuthProvider = ({ children }) => {
       console.error('Error al cerrar sesión:', error);
     } finally {
       localStorage.removeItem('token');
-      delete api.defaults.headers.common['Authorization'];
       setUser(null);
     }
   };

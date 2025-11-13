@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import api from "../../api/axios"
 
@@ -46,6 +46,37 @@ export default function ServiceForm() {
     setError("")
     setLoading(true)
 
+    // Validaciones
+    if (formData.name.trim().length < 3) {
+      setError("El nombre del servicio debe tener al menos 3 caracteres")
+      setLoading(false)
+      return
+    }
+
+    if (formData.duration_minutes < 1) {
+      setError("La duración debe ser al menos 1 minuto")
+      setLoading(false)
+      return
+    }
+
+    if (formData.duration_minutes > 1440) {
+      setError("La duración no puede exceder 1440 minutos (24 horas)")
+      setLoading(false)
+      return
+    }
+
+    if (!formData.price || parseFloat(formData.price) < 0) {
+      setError("El precio debe ser un valor válido mayor o igual a 0")
+      setLoading(false)
+      return
+    }
+
+    if (formData.image_url && !formData.image_url.match(/^https?:\/\/.+/)) {
+      setError("La URL de la imagen debe comenzar con http:// o https://")
+      setLoading(false)
+      return
+    }
+
     try {
       if (isEdit) {
         await api.put(`/businesses/${businessId}/services/${serviceId}`, formData)
@@ -89,7 +120,9 @@ export default function ServiceForm() {
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
               required
+              minLength="3"
             />
+            <p className="text-xs text-slate-400 mt-1">Mínimo 3 caracteres</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -98,11 +131,14 @@ export default function ServiceForm() {
               <input
                 type="number"
                 min="1"
+                max="1440"
                 value={formData.duration_minutes}
                 onChange={(e) => setFormData({ ...formData, duration_minutes: Number.parseInt(e.target.value) })}
                 className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                placeholder="30"
                 required
               />
+              <p className="text-xs text-slate-400 mt-1">Entre 1 y 1440 minutos (24 horas)</p>
             </div>
 
             <div>
@@ -114,8 +150,10 @@ export default function ServiceForm() {
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                 className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                placeholder="0.00"
                 required
               />
+              <p className="text-xs text-slate-400 mt-1">Ingresa el precio en formato decimal</p>
             </div>
           </div>
 

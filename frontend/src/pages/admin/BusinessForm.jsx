@@ -18,6 +18,19 @@ export default function BusinessForm() {
     setError("")
     setLoading(true)
 
+    // Validaciones
+    if (formData.name.trim().length < 3) {
+      setError("El nombre del negocio debe tener al menos 3 caracteres")
+      setLoading(false)
+      return
+    }
+
+    if (formData.name.trim().length > 100) {
+      setError("El nombre del negocio no debe exceder 100 caracteres")
+      setLoading(false)
+      return
+    }
+
     try {
       const response = await api.post("/businesses", formData)
       navigate(`/admin/business/${response.data.id}/services`)

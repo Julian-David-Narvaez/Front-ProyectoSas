@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from '../../api/axios';
+import { useToast } from '../../context/ToastContext';
 
 const EmployeesList = () => {
   const { businessId } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const [employees, setEmployees] = useState([]);
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -40,6 +42,23 @@ const EmployeesList = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validaciones
+    if (formData.name.trim().length < 3) {
+      toast.warning('El nombre debe tener al menos 3 caracteres');
+      return;
+    }
+
+    if (formData.email && (!formData.email.includes('@') || !formData.email.includes('.'))) {
+      toast.warning('Por favor ingresa un email válido');
+      return;
+    }
+
+    if (formData.phone && formData.phone.trim().length < 7) {
+      toast.warning('El teléfono debe tener al menos 7 caracteres');
+      return;
+    }
+
     try {
       if (editingEmployee) {
         await axios.put(`/businesses/${businessId}/employees/${editingEmployee.id}`, formData);
@@ -48,9 +67,10 @@ const EmployeesList = () => {
       }
       fetchData();
       resetForm();
+      toast.success(editingEmployee ? 'Empleado actualizado correctamente' : 'Empleado creado exitosamente');
     } catch (error) {
       console.error('Error al guardar empleado:', error);
-      alert('Error al guardar el empleado');
+      toast.error(error.response?.data?.message || 'Error al guardar el empleado');
     }
   };
 
@@ -72,9 +92,10 @@ const EmployeesList = () => {
     try {
       await axios.delete(`/businesses/${businessId}/employees/${employeeId}`);
       fetchData();
+      toast.success('Empleado eliminado correctamente');
     } catch (error) {
       console.error('Error al eliminar empleado:', error);
-      alert('Error al eliminar el empleado');
+      toast.error('Error al eliminar el empleado');
     }
   };
 
@@ -183,10 +204,11 @@ const EmployeesList = () => {
             <input
               type="number"
               value={formData.order}
-              onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
+              onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
               className="w-full border border-slate-700 bg-slate-800 text-white rounded px-3 py-2 focus:border-cyan-500 focus:outline-none"
+              step="1"
             />
-            <p className="text-xs text-slate-500 mt-1">Orden en el que aparecerá en la lista</p>
+            <p className="text-xs text-slate-500 mt-1">Orden en el que aparecerá en la lista (números enteros, puede usar negativos)</p>
           </div>
 
           <div className="flex gap-2">

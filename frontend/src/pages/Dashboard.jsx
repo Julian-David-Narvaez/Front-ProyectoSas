@@ -4,9 +4,11 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import api from "../api/axios"
 import { useAuth } from "../context/AuthContext"
+import { useToast } from "../context/ToastContext"
 
 export default function Dashboard() {
   const { user, logout } = useAuth()
+  const toast = useToast()
   const navigate = useNavigate()
   const [businesses, setBusinesses] = useState([])
   const [loading, setLoading] = useState(true)
@@ -142,7 +144,7 @@ export default function Dashboard() {
                         setBusinesses((prev) => prev.filter((b) => b.id !== business.id))
                       } catch (error) {
                         console.error('Error al eliminar negocio:', error)
-                        window.alert('No se pudo eliminar el negocio')
+                        toast.error('No se pudo eliminar el negocio')
                       }
                     }}
                     className="px-4 py-2.5 bg-red-700 text-white text-sm rounded-lg font-medium hover:bg-red-600 transition-all duration-200"

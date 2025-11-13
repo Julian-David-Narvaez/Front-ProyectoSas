@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 
 export default function Login() {
@@ -14,16 +14,47 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
+
+    // Validaciones
+    if (!email.trim()) {
+      setError("Por favor ingresa tu email")
+      return
+    }
+
+    if (!email.includes('@') || !email.includes('.')) {
+      setError("Por favor ingresa un email válido")
+      return
+    }
+
+    if (!password.trim()) {
+      setError("Por favor ingresa tu contraseña")
+      return
+    }
+
+    if (password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres")
+      return
+    }
+
     try {
       const loggedUser = await login(email, password)
+      console.log('Usuario logueado:', loggedUser);
+      
       // Redirigir según rol
       if (loggedUser && loggedUser.role === 'superadmin') {
+        console.log('Redirigiendo a superadmin');
         navigate('/admin/superadmin')
       } else {
+        console.log('Redirigiendo a dashboard');
         navigate('/dashboard')
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Error al iniciar sesión")
+      console.error('Error de login:', err);
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.errors?.email?.[0] ||
+                          err.message ||
+                          "Error al iniciar sesión";
+      setError(errorMessage);
     }
   }
 
