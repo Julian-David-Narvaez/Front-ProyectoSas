@@ -187,6 +187,7 @@ const EmployeesList = () => {
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               className="w-full border border-slate-700 bg-slate-800 text-white rounded px-3 py-2 focus:border-cyan-500 focus:outline-none"
+              min="0"
             />
           </div>
 
