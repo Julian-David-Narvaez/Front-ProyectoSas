@@ -10,6 +10,7 @@ export default function SchedulesList() {
   const { businessId } = useParams()
   const navigate = useNavigate()
   const [schedules, setSchedules] = useState([])
+  const [employees, setEmployees] = useState([])
   const [business, setBusiness] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -17,6 +18,7 @@ export default function SchedulesList() {
     weekday: 1,
     start_time: "09:00",
     end_time: "18:00",
+    employee_id: "",
   })
 
   useEffect(() => {
@@ -25,12 +27,14 @@ export default function SchedulesList() {
 
   const fetchData = async () => {
     try {
-      const [businessRes, schedulesRes] = await Promise.all([
+      const [businessRes, schedulesRes, employeesRes] = await Promise.all([
         api.get(`/businesses/${businessId}`),
         api.get(`/businesses/${businessId}/schedules`),
+        api.get(`/businesses/${businessId}/employees/admin`).catch(() => ({ data: [] })),
       ])
       setBusiness(businessRes.data)
       setSchedules(schedulesRes.data)
+      setEmployees(employeesRes.data)
     } catch (error) {
       console.error("Error al cargar datos:", error)
     } finally {
@@ -46,9 +50,13 @@ export default function SchedulesList() {
     }
     setLoading(true)
     try {
-      await api.post(`/businesses/${businessId}/schedules`, formData)
+      const dataToSend = {
+        ...formData,
+        employee_id: formData.employee_id || null,
+      }
+      await api.post(`/businesses/${businessId}/schedules`, dataToSend)
       setShowForm(false)
-      setFormData({ weekday: 1, start_time: "09:00", end_time: "18:00" })
+      setFormData({ weekday: 1, start_time: "09:00", end_time: "18:00", employee_id: "" })
       await fetchData()
     } catch (error) {
       alert(error.response?.data?.message || "Error al crear horario")
@@ -102,6 +110,25 @@ export default function SchedulesList() {
 
         {showForm && (
           <form onSubmit={handleSubmit} className="bg-slate-800 border border-slate-700 rounded-lg p-6 mb-6">
+            {employees.length > 0 && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Empleado (opcional - dejar vacío para horario general)
+                </label>
+                <select
+                  value={formData.employee_id}
+                  onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white focus:outline-none focus:border-cyan-500"
+                >
+                  <option value="">Horario General (todos los empleados)</option>
+                  {employees.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">Día</label>
@@ -157,11 +184,23 @@ export default function SchedulesList() {
                   key={schedule.id}
                   className="p-4 flex justify-between items-center hover:bg-slate-700/50 transition"
                 >
-                  <div>
-                    <span className="font-semibold text-white">{WEEKDAYS[schedule.weekday]}</span>
-                    <span className="text-slate-400 ml-4">
-                      {schedule.start_time} - {schedule.end_time}
-                    </span>
+                  <div className="flex-1">
+                    <div>
+                      <span className="font-semibold text-white">{WEEKDAYS[schedule.weekday]}</span>
+                      <span className="text-slate-400 ml-4">
+                        {schedule.start_time} - {schedule.end_time}
+                      </span>
+                    </div>
+                    {schedule.employee && (
+                      <div className="text-sm text-cyan-400 mt-1">
+                        👤 {schedule.employee.name}
+                      </div>
+                    )}
+                    {!schedule.employee && employees.length > 0 && (
+                      <div className="text-sm text-slate-500 mt-1">
+                        📋 Horario general
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={() => handleDelete(schedule.id)}

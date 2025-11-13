@@ -33,17 +33,20 @@ export default function BookingsCalendar() {
 
       const calendarEvents = bookingsRes.data
         .filter((booking) => booking.status !== "cancelled")
-        .map((booking) => ({
-          id: booking.id,
-          title: `${booking.service.name} - ${booking.customer_name}`,
-          start: booking.start_at,
-          end: booking.end_at,
-          backgroundColor: booking.status === "confirmed" ? "#06b6d4" : "#10b981",
-          borderColor: booking.status === "confirmed" ? "#0891b2" : "#059669",
-          extendedProps: {
-            booking: booking,
-          },
-        }))
+        .map((booking) => {
+          const employeeInfo = booking.employee ? ` - ${booking.employee.name}` : '';
+          return {
+            id: booking.id,
+            title: `${booking.service.name} - ${booking.customer_name}${employeeInfo}`,
+            start: booking.start_at,
+            end: booking.end_at,
+            backgroundColor: booking.status === "confirmed" ? "#06b6d4" : "#10b981",
+            borderColor: booking.status === "confirmed" ? "#0891b2" : "#059669",
+            extendedProps: {
+              booking: booking,
+            },
+          };
+        })
 
       setEvents(calendarEvents)
     } catch (error) {
@@ -301,6 +304,12 @@ export default function BookingsCalendar() {
                       </div>
                       <p className="font-medium text-sm text-white">{booking.customer_name}</p>
                       <p className="text-xs text-slate-300">{booking.service.name}</p>
+                      {booking.employee && (
+                        <p className="text-xs text-cyan-400">👤 {booking.employee.name}</p>
+                      )}
+                      {!booking.employee && (
+                        <p className="text-xs text-slate-500">👤 Sin empleado asignado</p>
+                      )}
                       <p className="text-xs text-slate-400">{booking.service.duration_minutes} min</p>
                     </div>
                   ))}
@@ -335,6 +344,17 @@ export default function BookingsCalendar() {
                   <p className="text-sm text-slate-300 font-medium">Servicio</p>
                   <p className="font-semibold text-white">{selectedBooking.service.name}</p>
                 </div>
+                {selectedBooking.employee ? (
+                  <div>
+                    <p className="text-sm text-slate-300 font-medium">Empleado/Barbero</p>
+                    <p className="font-semibold text-cyan-400">👤 {selectedBooking.employee.name}</p>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-sm text-slate-300 font-medium">Empleado/Barbero</p>
+                    <p className="font-semibold text-slate-500">Sin empleado específico</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-sm text-slate-300 font-medium">Fecha y Hora</p>
                   <p className="font-semibold text-white">

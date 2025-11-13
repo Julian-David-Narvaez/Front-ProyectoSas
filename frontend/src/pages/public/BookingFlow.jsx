@@ -11,6 +11,8 @@ export default function BookingFlow() {
 
   const [business, setBusiness] = useState(null)
   const [service, setService] = useState(null)
+  const [employees, setEmployees] = useState([])
+  const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [step, setStep] = useState(1)
   const [selectedDate, setSelectedDate] = useState("")
   const [availableSlots, setAvailableSlots] = useState([])
@@ -25,6 +27,7 @@ export default function BookingFlow() {
 
   useEffect(() => {
     fetchBusiness()
+    fetchEmployees()
   }, [slug])
 
   const fetchBusiness = async () => {
@@ -41,6 +44,22 @@ export default function BookingFlow() {
     }
   }
 
+  const fetchEmployees = async () => {
+    try {
+      const response = await api.get(`/businesses/slug/${slug}`)
+      const businessData = response.data
+      const employeesResponse = await api.get(`/businesses/${businessData.id}/employees`)
+      setEmployees(employeesResponse.data)
+    } catch (error) {
+      console.error("Error al cargar empleados:", error)
+    }
+  }
+
+  const handleEmployeeSelect = (employee) => {
+    setSelectedEmployee(employee)
+    setStep(2)
+  }
+
   const handleDateChange = async (date) => {
     setSelectedDate(date)
     setSelectedTime("")
@@ -48,15 +67,19 @@ export default function BookingFlow() {
     setLoading(true)
 
     try {
-      const response = await api.get(`/businesses/${business.id}/availability`, {
-        params: {
-          service_id: service.id,
-          date: date,
-        },
-      })
+      const params = {
+        service_id: service.id,
+        date: date,
+      }
+      
+      if (selectedEmployee) {
+        params.employee_id = selectedEmployee.id
+      }
+
+      const response = await api.get(`/businesses/${business.id}/availability`, { params })
       setAvailableSlots(response.data.available_slots)
       if (response.data.available_slots.length > 0) {
-        setStep(2)
+        setStep(3)
       } else {
         setError("No hay horarios disponibles para esta fecha")
       }
@@ -70,7 +93,7 @@ export default function BookingFlow() {
 
   const handleTimeSelect = (time) => {
     setSelectedTime(time)
-    setStep(3)
+    setStep(4)
   }
 
   const isValidEmail = (email) => {
@@ -135,6 +158,7 @@ export default function BookingFlow() {
       const payload = {
         business_id: business.id,
         service_id: service.id,
+        employee_id: selectedEmployee?.id || null,
         customer_name: formData.customer_name.trim(),
         customer_email: formData.customer_email.trim().toLowerCase(),
         date: selectedDate,
@@ -144,7 +168,7 @@ export default function BookingFlow() {
       const response = await api.post("/bookings", payload)
 
       setBooking(response.data.booking)
-      setStep(4)
+      setStep(5)
     } catch (err) {
       const message = extractApiError(err)
       setError(message)
@@ -198,11 +222,11 @@ export default function BookingFlow() {
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
-          {["Fecha", "Hora", "Datos", "Confirmación"].map((label, index) => (
+          {["Empleado", "Fecha", "Hora", "Datos", "Confirmación"].map((label, index) => (
             <div key={index} className="flex items-center flex-1">
               <div className="flex flex-col items-center flex-1">
                 <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-300 ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
                     step > index + 1
                       ? "bg-gradient-to-br from-green-400 to-emerald-500 text-white shadow-lg shadow-green-500/50"
                       : step === index + 1
@@ -212,12 +236,12 @@ export default function BookingFlow() {
                 >
                   {step > index + 1 ? "✓" : index + 1}
                 </div>
-                <span className={`mt-2 text-sm font-medium ${step >= index + 1 ? "text-cyan-400" : "text-gray-600"}`}>
+                <span className={`mt-2 text-xs font-medium ${step >= index + 1 ? "text-cyan-400" : "text-gray-600"}`}>
                   {label}
                 </span>
               </div>
-              {index < 3 && (
-                <div className="flex-1 h-1 mx-2 rounded-full overflow-hidden bg-gray-800/50">
+              {index < 4 && (
+                <div className="flex-1 h-1 mx-1 rounded-full overflow-hidden bg-gray-800/50">
                   <div
                     className={`h-full transition-all duration-500 ${
                       step > index + 1 ? "w-full bg-gradient-to-r from-green-400 to-emerald-500" : "w-0"
@@ -241,8 +265,67 @@ export default function BookingFlow() {
         {step === 1 && (
           <div className="bg-gray-900/40 backdrop-blur-xl border border-cyan-500/20 rounded-3xl shadow-2xl shadow-cyan-500/10 p-8">
             <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+              Selecciona un empleado
+            </h2>
+            {employees.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-400 mb-4">No hay empleados disponibles. Continuar sin seleccionar empleado.</p>
+                <button
+                  onClick={() => setStep(2)}
+                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl hover:from-cyan-400 hover:to-blue-500 shadow-lg shadow-cyan-500/30 transition-all font-bold"
+                >
+                  Continuar
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {employees.map((employee) => (
+                  <button
+                    key={employee.id}
+                    onClick={() => handleEmployeeSelect(employee)}
+                    className="p-6 bg-gray-800/50 border-2 border-cyan-500/30 rounded-2xl hover:bg-cyan-500/10 hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-500/20 hover:scale-105 transition-all text-left"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                        {employee.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-white">{employee.name}</h3>
+                        {employee.email && (
+                          <p className="text-sm text-gray-400">{employee.email}</p>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+                <button
+                  onClick={() => {
+                    setSelectedEmployee(null)
+                    setStep(2)
+                  }}
+                  className="p-6 bg-gray-800/50 border-2 border-gray-600 rounded-2xl hover:bg-gray-700/50 hover:border-gray-500 transition-all text-center"
+                >
+                  <div className="text-4xl mb-2">👤</div>
+                  <p className="text-gray-400 font-medium">Sin preferencia</p>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="bg-gray-900/40 backdrop-blur-xl border border-cyan-500/20 rounded-3xl shadow-2xl shadow-cyan-500/10 p-8">
+            <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
               Selecciona una fecha
             </h2>
+            {selectedEmployee && (
+              <div className="mb-6 p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-2xl">
+                <p className="text-gray-300">
+                  Empleado seleccionado:{" "}
+                  <strong className="text-cyan-400">{selectedEmployee.name}</strong>
+                </p>
+              </div>
+            )}
             <input
               type="date"
               min={getMinDate()}
@@ -250,15 +333,27 @@ export default function BookingFlow() {
               onChange={(e) => handleDateChange(e.target.value)}
               className="w-full px-6 py-4 bg-gray-800/50 border border-cyan-500/30 rounded-2xl text-lg text-white focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all"
             />
+            <button
+              onClick={() => setStep(1)}
+              className="mt-6 px-6 py-3 bg-gray-800/50 border border-gray-700 text-gray-300 rounded-xl hover:bg-gray-700/50 hover:border-gray-600 transition-all"
+            >
+              ← Cambiar empleado
+            </button>
           </div>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <div className="bg-gray-900/40 backdrop-blur-xl border border-cyan-500/20 rounded-3xl shadow-2xl shadow-cyan-500/10 p-8">
             <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
               Selecciona un horario
             </h2>
             <div className="mb-6 p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-2xl">
+              {selectedEmployee && (
+                <p className="text-gray-300 mb-1">
+                  Empleado:{" "}
+                  <strong className="text-cyan-400">{selectedEmployee.name}</strong>
+                </p>
+              )}
               <p className="text-gray-300">
                 Fecha:{" "}
                 <strong className="text-cyan-400">
@@ -290,7 +385,7 @@ export default function BookingFlow() {
               </div>
             )}
             <button
-              onClick={() => setStep(1)}
+              onClick={() => setStep(2)}
               className="mt-6 px-6 py-3 bg-gray-800/50 border border-gray-700 text-gray-300 rounded-xl hover:bg-gray-700/50 hover:border-gray-600 transition-all"
             >
               ← Cambiar fecha
@@ -298,7 +393,7 @@ export default function BookingFlow() {
           </div>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <div className="bg-gray-900/40 backdrop-blur-xl border border-cyan-500/20 rounded-3xl shadow-2xl shadow-cyan-500/10 p-8">
             <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
               Tus datos
@@ -307,6 +402,11 @@ export default function BookingFlow() {
               <p className="text-gray-300">
                 <strong className="text-cyan-400">Servicio:</strong> {service.name}
               </p>
+              {selectedEmployee && (
+                <p className="text-gray-300">
+                  <strong className="text-cyan-400">Empleado:</strong> {selectedEmployee.name}
+                </p>
+              )}
               <p className="text-gray-300">
                 <strong className="text-cyan-400">Fecha:</strong>{" "}
                 {new Date(selectedDate + "T00:00:00").toLocaleDateString("es-ES", {
@@ -352,7 +452,7 @@ export default function BookingFlow() {
               <div className="flex gap-4 pt-4">
                 <button
                   type="button"
-                  onClick={() => setStep(2)}
+                  onClick={() => setStep(3)}
                   className="flex-1 px-6 py-3 bg-gray-800/50 border border-gray-700 text-gray-300 rounded-xl hover:bg-gray-700/50 hover:border-gray-600 transition-all font-semibold"
                 >
                   ← Atrás
@@ -369,7 +469,7 @@ export default function BookingFlow() {
           </div>
         )}
 
-        {step === 4 && booking && (
+        {step === 5 && booking && (
           <div className="bg-gray-900/40 backdrop-blur-xl border border-green-500/20 rounded-3xl shadow-2xl shadow-green-500/10 p-8 text-center">
             <div className="text-7xl mb-6 animate-bounce">✅</div>
             <h2 className="text-4xl font-bold mb-6 bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
@@ -379,6 +479,11 @@ export default function BookingFlow() {
               <p className="text-gray-300">
                 <strong className="text-cyan-400">Servicio:</strong> {booking.service.name}
               </p>
+              {booking.employee && (
+                <p className="text-gray-300">
+                  <strong className="text-cyan-400">Empleado:</strong> {booking.employee.name}
+                </p>
+              )}
               <p className="text-gray-300">
                 <strong className="text-cyan-400">Fecha:</strong>{" "}
                 {new Date(booking.start_at).toLocaleDateString("es-ES", {

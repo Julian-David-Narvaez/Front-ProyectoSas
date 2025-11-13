@@ -10,6 +10,7 @@ import Register from './pages/Register';
 // Admin
 import BookingsCalendar from './pages/admin/BookingsCalendar';
 import BusinessForm from './pages/admin/BusinessForm';
+import EmployeesList from './pages/admin/EmployeesList';
 import PageBuilder from './pages/admin/PageBuilder';
 import SchedulesList from './pages/admin/SchedulesList';
 import ServiceForm from './pages/admin/ServiceForm';
@@ -75,6 +76,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <SchedulesList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/business/:businessId/employees"
+            element={
+              <ProtectedRoute>
+                <EmployeesList />
               </ProtectedRoute>
             }
           />

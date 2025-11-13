@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import api from "../../api/axios"
 
@@ -60,6 +60,12 @@ export default function ServicesList() {
               className="px-4 py-2 bg-cyan-500 text-slate-950 rounded hover:bg-cyan-400 font-medium"
             >
               📅 Agenda
+            </button>
+            <button
+              onClick={() => navigate(`/admin/business/${businessId}/employees`)}
+              className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-400"
+            >
+              👥 Empleados
             </button>
             <button
               onClick={() => navigate(`/admin/business/${businessId}/schedules`)}
