@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import api from "../../api/axios"
+import ConfirmDialog from "../../components/ConfirmDialog"
 import { useToast } from "../../context/ToastContext"
 
 export default function ServicesList() {
@@ -12,6 +13,7 @@ export default function ServicesList() {
   const [services, setServices] = useState([])
   const [business, setBusiness] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, serviceId: null })
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,8 +33,8 @@ export default function ServicesList() {
     fetchData()
   }, [businessId])
 
-  const handleDelete = async (serviceId) => {
-    if (!window.confirm("¿Estás seguro de eliminar este servicio?")) return
+  const handleDelete = async () => {
+    const serviceId = confirmDialog.serviceId;
     try {
       await api.delete(`/businesses/${businessId}/services/${serviceId}`)
       setServices(services.filter((s) => s.id !== serviceId))
@@ -134,7 +136,7 @@ export default function ServicesList() {
                       Editar
                     </button>
                     <button
-                      onClick={() => handleDelete(service.id)}
+                      onClick={() => setConfirmDialog({ isOpen: true, serviceId: service.id })}
                       className="px-4 py-2 bg-red-900 text-red-100 text-sm rounded hover:bg-red-800"
                     >
                       Eliminar
@@ -146,6 +148,15 @@ export default function ServicesList() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ isOpen: false, serviceId: null })}
+        onConfirm={handleDelete}
+        title="Eliminar Servicio"
+        message="¿Estás seguro de que deseas eliminar este servicio? Esta acción no se puede deshacer."
+        type="danger"
+      />
     </div>
   )
 }

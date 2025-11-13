@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import api from "../../api/axios"
+import ConfirmDialog from "../../components/ConfirmDialog"
 import { useToast } from "../../context/ToastContext"
 
 const WEEKDAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]
@@ -22,6 +23,7 @@ export default function SchedulesList() {
     end_time: "18:00",
     employee_id: "",
   })
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, scheduleId: null })
 
   useEffect(() => {
     fetchData()
@@ -68,8 +70,8 @@ export default function SchedulesList() {
     }
   }
 
-  const handleDelete = async (scheduleId) => {
-    if (!confirm("¿Eliminar este horario?")) return
+  const handleDelete = async () => {
+    const scheduleId = confirmDialog.scheduleId;
     setLoading(true)
     try {
       await api.delete(`/businesses/${businessId}/schedules/${scheduleId}`)
@@ -207,7 +209,7 @@ export default function SchedulesList() {
                     )}
                   </div>
                   <button
-                    onClick={() => handleDelete(schedule.id)}
+                    onClick={() => setConfirmDialog({ isOpen: true, scheduleId: schedule.id })}
                     className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition"
                     aria-label={`Eliminar horario de ${WEEKDAYS[schedule.weekday]}`}
                   >
@@ -219,6 +221,15 @@ export default function SchedulesList() {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ isOpen: false, scheduleId: null })}
+        onConfirm={handleDelete}
+        title="Eliminar Horario"
+        message="¿Estás seguro de que deseas eliminar este horario? Esta acción no se puede deshacer."
+        type="danger"
+      />
     </div>
   )
 }

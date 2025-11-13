@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import api from "../api/axios"
+import ConfirmDialog from "../components/ConfirmDialog"
 import { useAuth } from "../context/AuthContext"
 import { useToast } from "../context/ToastContext"
 
@@ -12,6 +13,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const [businesses, setBusinesses] = useState([])
   const [loading, setLoading] = useState(true)
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, businessId: null })
 
   useEffect(() => {
     fetchBusinesses()
@@ -33,6 +35,18 @@ export default function Dashboard() {
   const handleLogout = async () => {
     await logout()
     navigate("/login")
+  }
+
+  const handleDeleteBusiness = async () => {
+    const businessId = confirmDialog.businessId;
+    try {
+      await api.delete(`/businesses/${businessId}`)
+      setBusinesses((prev) => prev.filter((b) => b.id !== businessId))
+      toast.success('Negocio eliminado correctamente')
+    } catch (error) {
+      console.error('Error al eliminar negocio:', error)
+      toast.error(error?.response?.data?.message || 'No se pudo eliminar el negocio')
+    }
   }
 
   if (loading) {
@@ -161,17 +175,7 @@ export default function Dashboard() {
                     Gestionar
                   </button>
                   <button
-                    onClick={async () => {
-                      if (!window.confirm('¿Estás seguro de eliminar este negocio y todos sus datos? Esta acción no se puede deshacer.')) return
-                      try {
-                        await api.delete(`/businesses/${business.id}`)
-                        setBusinesses((prev) => prev.filter((b) => b.id !== business.id))
-                        toast.success('Negocio eliminado correctamente')
-                      } catch (error) {
-                        console.error('Error al eliminar negocio:', error)
-                        toast.error(error?.response?.data?.message || 'No se pudo eliminar el negocio')
-                      }
-                    }}
+                    onClick={() => setConfirmDialog({ isOpen: true, businessId: business.id })}
                     disabled={business.page && !business.page.is_active}
                     className={`px-4 py-2.5 text-sm rounded-lg font-medium transition-all duration-200 ${
                       business.page && !business.page.is_active
@@ -205,6 +209,15 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ isOpen: false, businessId: null })}
+        onConfirm={handleDeleteBusiness}
+        title="Eliminar Negocio"
+        message="¿Estás seguro de eliminar este negocio y todos sus datos? Esta acción no se puede deshacer."
+        type="danger"
+      />
     </div>
   )
 }

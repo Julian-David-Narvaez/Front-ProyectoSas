@@ -12,6 +12,7 @@ import { CSS } from "@dnd-kit/utilities"
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import api from "../../api/axios"
+import ConfirmDialog from "../../components/ConfirmDialog"
 import { useToast } from "../../context/ToastContext"
 
 function SortableBlock({ block, onEdit, onDelete }) {
@@ -245,6 +246,7 @@ export default function PageBuilder() {
   const [editingBlock, setEditingBlock] = useState(null)
   const [saving, setSaving] = useState(false)
   const [blockedMessage, setBlockedMessage] = useState(null)
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, blockId: null })
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -315,9 +317,8 @@ export default function PageBuilder() {
     setEditingBlock(null)
   }
 
-  const handleDeleteBlock = async (blockId) => {
-    if (!confirm("¿Eliminar este bloque?")) return
-
+  const handleDeleteBlock = async () => {
+    const blockId = confirmDialog.blockId;
     try {
       await api.delete(`/businesses/${businessId}/page/blocks/${blockId}`)
       setBlocks(blocks.filter((b) => b.id !== blockId))
@@ -386,7 +387,7 @@ export default function PageBuilder() {
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
             {blocks.map((block) => (
-              <SortableBlock key={block.id} block={block} onEdit={setEditingBlock} onDelete={handleDeleteBlock} />
+              <SortableBlock key={block.id} block={block} onEdit={setEditingBlock} onDelete={(blockId) => setConfirmDialog({ isOpen: true, blockId })} />
             ))}
           </SortableContext>
         </DndContext>
@@ -401,6 +402,15 @@ export default function PageBuilder() {
       {editingBlock && (
         <BlockEditor block={editingBlock} onSave={handleEditBlock} onCancel={() => setEditingBlock(null)} />
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ isOpen: false, blockId: null })}
+        onConfirm={handleDeleteBlock}
+        title="Eliminar Bloque"
+        message="¿Estás seguro de que deseas eliminar este bloque de la landing page? Esta acción no se puede deshacer."
+        type="danger"
+      />
     </div>
   )
 }

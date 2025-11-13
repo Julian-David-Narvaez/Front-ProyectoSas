@@ -19,6 +19,7 @@ const EmployeesList = () => {
     is_active: true,
     order: 0
   });
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, employeeId: null });
 
   useEffect(() => {
     fetchData();
@@ -86,9 +87,8 @@ const EmployeesList = () => {
     setShowForm(true);
   };
 
-  const handleDelete = async (employeeId) => {
-    if (!confirm('¿Estás seguro de eliminar este empleado?')) return;
-    
+  const handleDelete = async () => {
+    const employeeId = confirmDialog.employeeId;
     try {
       await axios.delete(`/businesses/${businessId}/employees/${employeeId}`);
       fetchData();
@@ -282,7 +282,7 @@ const EmployeesList = () => {
                       Editar
                     </button>
                     <button
-                      onClick={() => handleDelete(employee.id)}
+                      onClick={() => setConfirmDialog({ isOpen: true, employeeId: employee.id })}
                       className="text-red-400 hover:text-red-300"
                     >
                       Eliminar
