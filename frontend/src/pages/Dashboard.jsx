@@ -125,14 +125,38 @@ export default function Dashboard() {
                 key={business.id}
                 className="group bg-gray-900/30 backdrop-blur-sm rounded-xl border border-cyan-500/20 hover:border-cyan-500/40 shadow-xl shadow-cyan-500/5 hover:shadow-cyan-500/20 transition-all duration-300 p-6"
               >
-                <h4 className="text-xl font-semibold mb-2 text-gray-100 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-cyan-400 group-hover:to-blue-500 transition-all duration-300">
-                  {business.name}
-                </h4>
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="text-xl font-semibold text-gray-100 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-cyan-400 group-hover:to-blue-500 transition-all duration-300">
+                    {business.name}
+                  </h4>
+                  {business.page && !business.page.is_active && (
+                    <span className="px-2 py-1 text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-full">
+                      Deshabilitada
+                    </span>
+                  )}
+                  {business.page && business.page.is_active && (
+                    <span className="px-2 py-1 text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full">
+                      Activa
+                    </span>
+                  )}
+                </div>
                 <p className="text-gray-400 text-sm mb-6 line-clamp-2">{business.description}</p>
+                {business.page && !business.page.is_active && (
+                  <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg">
+                    <p className="text-rose-400 text-xs">
+                      Esta página está deshabilitada. No puedes gestionar sus recursos ni es visible públicamente.
+                    </p>
+                  </div>
+                )}
                 <div className="flex gap-3">
                   <button
                     onClick={() => navigate(`/admin/business/${business.id}/services`)}
-                    className="flex-1 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-sm rounded-lg font-medium shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-300"
+                    disabled={business.page && !business.page.is_active}
+                    className={`flex-1 px-4 py-2.5 text-sm rounded-lg font-medium transition-all duration-300 ${
+                      business.page && !business.page.is_active
+                        ? 'bg-gray-700/30 text-gray-500 cursor-not-allowed border border-gray-700/50'
+                        : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40'
+                    }`}
                   >
                     Gestionar
                   </button>
@@ -142,20 +166,36 @@ export default function Dashboard() {
                       try {
                         await api.delete(`/businesses/${business.id}`)
                         setBusinesses((prev) => prev.filter((b) => b.id !== business.id))
+                        toast.success('Negocio eliminado correctamente')
                       } catch (error) {
                         console.error('Error al eliminar negocio:', error)
-                        toast.error('No se pudo eliminar el negocio')
+                        toast.error(error?.response?.data?.message || 'No se pudo eliminar el negocio')
                       }
                     }}
-                    className="px-4 py-2.5 bg-red-700 text-white text-sm rounded-lg font-medium hover:bg-red-600 transition-all duration-200"
+                    disabled={business.page && !business.page.is_active}
+                    className={`px-4 py-2.5 text-sm rounded-lg font-medium transition-all duration-200 ${
+                      business.page && !business.page.is_active
+                        ? 'bg-gray-700/30 text-gray-500 cursor-not-allowed border border-gray-700/50'
+                        : 'bg-red-700 text-white hover:bg-red-600'
+                    }`}
                   >
                     Eliminar
                   </button>
                   <a
-                    href={`/${business.slug}`}
-                    target="_blank"
+                    href={business.page && business.page.is_active ? `/${business.slug}` : '#'}
+                    target={business.page && business.page.is_active ? "_blank" : "_self"}
                     rel="noopener noreferrer"
-                    className="flex-1 px-4 py-2.5 bg-gray-800/50 text-gray-300 text-sm rounded-lg font-medium border border-gray-700/50 hover:bg-gray-800 hover:border-gray-600 transition-all duration-300 text-center"
+                    onClick={(e) => {
+                      if (business.page && !business.page.is_active) {
+                        e.preventDefault()
+                        toast.error('Esta página está deshabilitada y no es visible públicamente')
+                      }
+                    }}
+                    className={`flex-1 px-4 py-2.5 text-sm rounded-lg font-medium transition-all duration-300 text-center ${
+                      business.page && !business.page.is_active
+                        ? 'bg-gray-700/30 text-gray-500 cursor-not-allowed border border-gray-700/50'
+                        : 'bg-gray-800/50 text-gray-300 border border-gray-700/50 hover:bg-gray-800 hover:border-gray-600'
+                    }`}
                   >
                     Ver Landing
                   </a>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import api from "../../api/axios"
 
@@ -316,7 +316,12 @@ export default function LandingPage() {
         const response = await api.get(`/businesses/slug/${slug}`)
         setBusiness(response.data)
       } catch (err) {
-        setError(err?.response?.data?.message || "Negocio no encontrado")
+        // Verificar si es un error 403 (página deshabilitada)
+        if (err?.response?.status === 403) {
+          setError(err?.response?.data?.message || "Esta página no está disponible en este momento")
+        } else {
+          setError(err?.response?.data?.message || "Negocio no encontrado")
+        }
       } finally {
         setLoading(false)
       }
@@ -337,19 +342,22 @@ export default function LandingPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
-        <div className="text-center p-8 bg-white rounded-2xl shadow-xl max-w-md">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-black">
+        <div className="text-center p-8 bg-gray-900/50 backdrop-blur-xl rounded-2xl shadow-xl max-w-md border border-rose-500/30">
+          <div className="w-16 h-16 bg-rose-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-500/30">
+            <svg className="w-8 h-8 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
             </svg>
           </div>
-          <div className="text-xl font-semibold text-red-600">{error}</div>
+          <div className="text-xl font-semibold text-rose-400 mb-2">{error}</div>
+          <p className="text-gray-400 text-sm">
+            Esta página puede estar temporalmente deshabilitada o no existir.
+          </p>
         </div>
       </div>
     )
