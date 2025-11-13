@@ -144,7 +144,7 @@ const EmployeesList = () => {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">Empleados / Barberos</h2>
+        <h2 className="text-2xl font-bold text-white">Empleados</h2>
         <button
           onClick={() => setShowForm(!showForm)}
           className="bg-cyan-500 text-slate-950 px-4 py-2 rounded hover:bg-cyan-400 font-medium"
