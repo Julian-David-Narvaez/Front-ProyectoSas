@@ -11,7 +11,7 @@ export default function BookingFlow() {
 
   const [business, setBusiness] = useState(null)
   const [service, setService] = useState(null)
-  const [employees, setEmployees] = useState([])
+  // const [employees, setEmployees] = useState([])
   const [activeEmployees, setActiveEmployees] = useState([])
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [step, setStep] = useState(1)
@@ -50,7 +50,6 @@ export default function BookingFlow() {
       const response = await api.get(`/businesses/slug/${slug}`)
       const businessData = response.data
       const employeesResponse = await api.get(`/businesses/${businessData.id}/employees`)
-      setEmployees(employeesResponse.data)
       // Filtrar empleados activos (asumiendo propiedad 'active')
       const activos = employeesResponse.data.filter(e => e.active !== false)
       setActiveEmployees(activos)
@@ -270,54 +269,42 @@ export default function BookingFlow() {
           </div>
         )}
 
-        {step === 1 && (
+        {step === 1 && activeEmployees.length > 0 && (
           <div className="bg-gray-900/40 backdrop-blur-xl border border-cyan-500/20 rounded-3xl shadow-2xl shadow-cyan-500/10 p-8">
             <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
               Selecciona un empleado
             </h2>
-            {activeEmployees.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-400 mb-4">No hay empleados activos disponibles. Continuar sin seleccionar empleado.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {activeEmployees.map((employee) => (
                 <button
-                  onClick={() => setStep(2)}
-                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl hover:from-cyan-400 hover:to-blue-500 shadow-lg shadow-cyan-500/30 transition-all font-bold"
+                  key={employee.id}
+                  onClick={() => handleEmployeeSelect(employee)}
+                  className="p-6 bg-gray-800/50 border-2 border-cyan-500/30 rounded-2xl hover:bg-cyan-500/10 hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-500/20 hover:scale-105 transition-all text-left"
                 >
-                  Continuar
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {activeEmployees.map((employee) => (
-                  <button
-                    key={employee.id}
-                    onClick={() => handleEmployeeSelect(employee)}
-                    className="p-6 bg-gray-800/50 border-2 border-cyan-500/30 rounded-2xl hover:bg-cyan-500/10 hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-500/20 hover:scale-105 transition-all text-left"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                        {employee.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-white">{employee.name}</h3>
-                        {employee.email && (
-                          <p className="text-sm text-gray-400">{employee.email}</p>
-                        )}
-                      </div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                      {employee.name.charAt(0).toUpperCase()}
                     </div>
-                  </button>
-                ))}
-                <button
-                  onClick={() => {
-                    setSelectedEmployee(null)
-                    setStep(2)
-                  }}
-                  className="p-6 bg-gray-800/50 border-2 border-gray-600 rounded-2xl hover:bg-gray-700/50 hover:border-gray-500 transition-all text-center"
-                >
-                  <div className="text-4xl mb-2">👤</div>
-                  <p className="text-gray-400 font-medium">Sin preferencia</p>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-white">{employee.name}</h3>
+                      {employee.email && (
+                        <p className="text-sm text-gray-400">{employee.email}</p>
+                      )}
+                    </div>
+                  </div>
                 </button>
-              </div>
-            )}
+              ))}
+              <button
+                onClick={() => {
+                  setSelectedEmployee(null)
+                  setStep(2)
+                }}
+                className="p-6 bg-gray-800/50 border-2 border-gray-600 rounded-2xl hover:bg-gray-700/50 hover:border-gray-500 transition-all text-center"
+              >
+                <div className="text-4xl mb-2">👤</div>
+                <p className="text-gray-400 font-medium">Sin preferencia</p>
+              </button>
+            </div>
           </div>
         )}
 
