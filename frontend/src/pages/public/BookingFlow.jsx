@@ -12,6 +12,7 @@ export default function BookingFlow() {
   const [business, setBusiness] = useState(null)
   const [service, setService] = useState(null)
   const [employees, setEmployees] = useState([])
+  const [activeEmployees, setActiveEmployees] = useState([])
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [step, setStep] = useState(1)
   const [selectedDate, setSelectedDate] = useState("")
@@ -50,6 +51,8 @@ export default function BookingFlow() {
       const businessData = response.data
       const employeesResponse = await api.get(`/businesses/${businessData.id}/employees`)
       setEmployees(employeesResponse.data)
+      // Filtrar empleados activos (asumiendo propiedad 'active')
+      setActiveEmployees(employeesResponse.data.filter(e => e.active !== false))
     } catch (error) {
       console.error("Error al cargar empleados:", error)
     }
@@ -267,9 +270,9 @@ export default function BookingFlow() {
             <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
               Selecciona un empleado
             </h2>
-            {employees.length === 0 ? (
+            {activeEmployees.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-400 mb-4">No hay empleados disponibles. Continuar sin seleccionar empleado.</p>
+                <p className="text-gray-400 mb-4">No hay empleados activos disponibles. Continuar sin seleccionar empleado.</p>
                 <button
                   onClick={() => setStep(2)}
                   className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl hover:from-cyan-400 hover:to-blue-500 shadow-lg shadow-cyan-500/30 transition-all font-bold"
@@ -279,7 +282,7 @@ export default function BookingFlow() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {employees.map((employee) => (
+                {activeEmployees.map((employee) => (
                   <button
                     key={employee.id}
                     onClick={() => handleEmployeeSelect(employee)}
