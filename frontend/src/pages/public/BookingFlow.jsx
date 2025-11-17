@@ -52,7 +52,12 @@ export default function BookingFlow() {
       const employeesResponse = await api.get(`/businesses/${businessData.id}/employees`)
       setEmployees(employeesResponse.data)
       // Filtrar empleados activos (asumiendo propiedad 'active')
-      setActiveEmployees(employeesResponse.data.filter(e => e.active !== false))
+      const activos = employeesResponse.data.filter(e => e.active !== false)
+      setActiveEmployees(activos)
+      // Si no hay empleados activos, avanzar automáticamente al paso de fecha
+      if (activos.length === 0) {
+        setStep(2)
+      }
     } catch (error) {
       console.error("Error al cargar empleados:", error)
     }
